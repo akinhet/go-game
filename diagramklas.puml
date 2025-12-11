@@ -1,27 +1,148 @@
 @startuml
-'https://plantuml.com/class-diagram
 
-abstract class AbstractList
-abstract AbstractCollection
-interface List
-interface Collection
+' Ustawienia stylistyczne dla lepszej czytelności
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
 
-List <|-- AbstractList
-Collection <|-- AbstractCollection
+title Diagram Klas Systemu Gry w Go - Iteracja 1
 
-Collection <|- List
-AbstractCollection <|- AbstractList
-AbstractList <|-- ArrayList
+' ---------------------------------------------------------
+' PAKIET SHARED (Współdzielone)
+' ---------------------------------------------------------
+package "Shared (Wspólne)" {
 
-class ArrayList {
-Object[] elementData
-size()
+    enum StoneColor {
+        BLACK
+        WHITE
+        EMPTY
+    }
+
+    class Move {
+        - int x
+        - int y
+        - StoneColor color
+        + Move(int x, int y, StoneColor color)
+        + getX() : int
+        + getY() : int
+        + getColor() : StoneColor
+    }
+
+        class Board {
+        - int size
+        - StoneColor[][] grid
+        + Board(int size)
+        + getStone(int x, int y) : StoneColor
+        + setStone(int x, int y, StoneColor color) : void
+        + removeStone(int x, int y) : void
+        + getSize() : int
+        + clear() : void
+    }
 }
 
-enum TimeUnit {
-DAYS
-HOURS
-MINUTES
+' ---------------------------------------------------------
+' PAKIET SERVER (Logika biznesowa i sieciowa)
+' ---------------------------------------------------------
+package "Server" {
+
+    class GoServer {
+        - int port
+        - ServerSocket serverSocket
+        + main(String[] args)
+        + start() : void
+        - waitForPlayers() : void
+    }
+
+    class Game {
+        - PlayerHandler blackPlayer
+        - PlayerHandler whitePlayer
+        - PlayerHandler currentPlayer
+        - Board board
+        - GameLogic gameLogic
+        + Game(PlayerHandler p1, PlayerHandler p2)
+        + processMove(int x, int y, PlayerHandler player) : synchronized void
+        - switchTurn() : void
+        - broadcastMessage(String message) : void
+    }
+
+    class PlayerHandler implements Runnable {
+        - Socket socket
+        - PrintWriter output
+        - BufferedReader input
+        - Game game
+        - StoneColor myColor
+        + PlayerHandler(Socket socket, StoneColor color)
+        + run() : void
+        + sendMessage(String msg) : void
+        + setGame(Game game) : void
+        + getColor() : StoneColor
+    }
+
+
+
+    class GameLogic {
+        + validateMove(Board board, int x, int y, StoneColor color) : boolean
+        + checkCaptures(Board board, int x, int y, StoneColor color) : List<Point>
+        - countLiberties(Board board, int x, int y, boolean[][] visited) : int
+        - getGroup(Board board, int x, int y) : List<Point>
+        - isSuicide(Board board, int x, int y, StoneColor color) : boolean
+    }
 }
+
+' ---------------------------------------------------------
+' PAKIET CLIENT (Warstwa prezentacji)
+' ---------------------------------------------------------
+package "Client" {
+
+    class GoClient {
+        - Socket socket
+        - PrintWriter output
+        - ConsoleView view
+        + main(String[] args)
+        + connect(String host, int port) : void
+        + sendMove(int x, int y) : void
+    }
+
+    class ServerListener implements Runnable {
+        - BufferedReader input
+        - ConsoleView view
+        + ServerListener(InputStream in, ConsoleView view)
+        + run() : void
+    }
+
+    class ConsoleView {
+        - Board board
+        + updateBoard(int x, int y, StoneColor color) : void
+        + displayMessage(String msg) : void
+        + getUserInput() : String
+        + parseInputToMove(String input) : Move
+    }
+}
+
+' ---------------------------------------------------------
+' RELACJE
+' ---------------------------------------------------------
+
+' Powiązania w serwerze
+GoServer ..> Game : <<creates>>
+GoServer ..> PlayerHandler : <<creates>>
+
+Game "1" *-- "1" Board : zawiera (Composition)
+Game "1" o-- "2" PlayerHandler : zarządza (Aggregation)
+Game ..> GameLogic : używa (Dependency)
+
+GameLogic ..> Board : czyta stan
+PlayerHandler ..> Move : deserializuje
+
+' Powiązania w kliencie
+GoClient "1" *-- "1" ConsoleView : używa
+GoClient "1" *-- "1" ServerListener : uruchamia
+ServerListener ..> ConsoleView : aktualizuje widok
+ConsoleView *-- Board
+
+' Powiązania między pakietami
+PlayerHandler ..> StoneColor
+Board *-- StoneColor
+Move *-- StoneColor
 
 @enduml
