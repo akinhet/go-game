@@ -1,4 +1,7 @@
-package org.example.gogame;
+package org.example.gogame.server;
+
+import org.example.gogame.Board;
+import org.example.gogame.StoneColor;
 
 import java.util.ArrayList;
 
