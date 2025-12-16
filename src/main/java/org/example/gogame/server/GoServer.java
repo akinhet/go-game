@@ -42,13 +42,6 @@ public class GoServer {
 
                 System.out.println("Both players connected. Starting game.");
                 Game game = new Game(player1, player2, 19);
-
-                player1.setGame(game);
-
-                player2.setGame(game);
-
-                new Thread(player1).start();
-                new Thread(player2).start();
             }
         } catch (IOException e) {
             System.err.println("Server error: " + e.getMessage());

@@ -23,6 +23,16 @@ public class Game {
         blackPlayer.setGame(this);
         whitePlayer.setGame(this);
 
+        new Thread(blackPlayer).start();
+        new Thread(whitePlayer).start();
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception e) {}
+
+        blackPlayer.sendMessage("COLOR BLACK");
+        whitePlayer.sendMessage("COLOR WHITE");
+
         BroadcastMessage("GAME_START " + size);
         BroadcastMessage("TURN BLACK");
     }
@@ -62,7 +72,7 @@ public class Game {
                 }
                 BroadcastMessage(moveMessage.toString());
                 switchTurn();
-                BroadcastMessage("TURN" + currentPlayer.getColor().name());
+                BroadcastMessage("TURN " + currentPlayer.getColor().name());
             } else {
                 player.sendMessage("ERROR Invalid move - put valid move");
             }

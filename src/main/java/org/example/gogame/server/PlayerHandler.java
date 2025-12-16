@@ -54,12 +54,15 @@ public class PlayerHandler implements Runnable {
 
         if (command.startsWith("MOVE")) {
             String[] parts = command.split(" ");
-            if (parts.length == 3) {
+            try {
                 int x = Integer.parseInt(parts[1]);
                 int y = Integer.parseInt(parts[2]);
 
                 game.processMove(x, y, this);
+            } catch (Exception e) {
+                sendMessage("ERROR Wrong move");
             }
+
         }  else if (command.equals("PASS")) {
             game.processPass(this);
         } else if (command.equals("QUIT")) {
