@@ -1,31 +1,20 @@
 package org.example.gogame.client;
 
-import java.io.PrintWriter;
 import java.net.Socket;
 
 public class GoClient {
-
     public static void main(String[] args) {
-        try (Socket socket = new Socket("localhost", 1111);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+        try {
+            System.out.println("Connecting to server...");
+            Socket socket = new Socket("localhost", 1111);
 
             ConsoleView view = new ConsoleView(19);
+            ClientGameController controller = new ClientGameController(socket, view);
 
-            ServerListener listener = new ServerListener(socket.getInputStream(), view);
-            new Thread(listener).start();
-
-            while (true) {
-                String command = view.getUserInput();
-
-                if ("quit".equalsIgnoreCase(command)) {
-                    out.println("QUIT");
-                    break;
-                }
-
-                out.println("MOVE " + command);
-            }
+            controller.play();
 
         } catch (Exception e) {
+            System.err.println("Client Error: " + e.getMessage());
             e.printStackTrace();
         }
     }
