@@ -50,8 +50,11 @@ public class Game {
                         .append(y).append(" ")
                         .append(player.getColor().name());
 
+                BroadcastMessage(moveMessage.toString());
+
+                moveMessage = new StringBuilder();
+                moveMessage.append("CAPTURES");
                 if (!captures.isEmpty()) {
-                    moveMessage.append("; CAPTURES");
                     for (int[] point : captures) {
                         moveMessage.append(" ").append(point[0])
                                 .append(" ").append(point[1]);

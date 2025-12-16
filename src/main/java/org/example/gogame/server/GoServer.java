@@ -12,13 +12,13 @@ public class GoServer {
     private static int port = 1111;
 
     public static void main(String[] args) {
-        if (args.length == 2) {
+        if (args.length == 1) {
             try {
                 port = Integer.parseInt(args[1]);
             } catch (NumberFormatException e) {
                 System.err.println("Not a port number: " + args[1]);
             }
-        } else if (args.length == 1) {
+        } else if (args.length == 0) {
             new GoServer().start();
         } else {
             System.err.println("Malformed arguments. Exiting...");
