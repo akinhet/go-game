@@ -52,13 +52,13 @@ public class Game {
                     board.setStone(x, y, player.getColor());
 
                     captures = gameLogic.checkCaptures(board, x, y, player.getColor());
-                    if (captures.size()==1){
+                    for (int[] capture : captures) {
+                        board.removeStone(capture[0], capture[1]);
+                    }
+                    if (captures.size()==1 && gameLogic.countChainLiberties(board,x,y,player.getColor()) == 1){
                         lastMove = new int[]{captures.get(0)[0],captures.get(0)[1]};
                     } else {
                         lastMove = new int[]{-2,0};
-                    }
-                    for (int[] capture : captures) {
-                        board.removeStone(capture[0], capture[1]);
                     }
 
                     finalform = gameLogic.finalCheck(board, x, y, player.getColor());

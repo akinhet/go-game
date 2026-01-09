@@ -14,7 +14,7 @@ public class GameLogic {
     public boolean validateMove(Board board, int x, int y){
         return inBounds(board,x,y) && board.getStone(x,y) == StoneColor.EMPTY;
     }
-    private int countChainLiberties(Board board, int startX, int startY, StoneColor color) {
+    public int countChainLiberties(Board board, int startX, int startY, StoneColor color) {
         Set<String> visited = new HashSet<>();
         Set<String> liberties = new HashSet<>();
         ArrayList<int[]> stack = new ArrayList<>();
