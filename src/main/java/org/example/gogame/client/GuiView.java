@@ -5,6 +5,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -14,6 +15,8 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import org.example.gogame.StoneColor;
+
+import java.util.Optional;
 
 /**
  * Represents the Graphical User Interface (GUI) for the Go game.
@@ -217,6 +220,27 @@ public class GuiView {
             alert.setHeaderText("Message from the server");
             alert.setContentText(err);
             alert.showAndWait();
+        });
+    }
+
+
+    /**
+     * Shows the user a dialog regarding the negotiations to end the game.
+     *
+     * @param msg The message text.
+     */
+    public void negotiate(String msg) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Negotiation");
+            alert.setHeaderText("Opponent wants to negotiate");
+            alert.setContentText(msg);
+            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.YES)
+                controller.handleUserInput("AGREE");
+            else
+                controller.handleUserInput("RESUME");
         });
     }
 }

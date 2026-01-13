@@ -180,9 +180,7 @@ public class Game {
         int currentBlack = territory[0] + blackPrisoners;
         int currentWhite = territory[1] + whitePrisoners;
 
-        BroadcastMessage("MESSAGE Game stopped. Removing dead stones phase.");
-        BroadcastMessage("MESSAGE Suggested Score -> BLACK: " + currentBlack + ", WHITE: " + currentWhite);
-        BroadcastMessage("MESSAGE Type 'AGREE' to finish or 'RESUME' to continue playing.");
+        BroadcastMessage("NEGOTIATION Suggested Score -> BLACK: " + currentBlack + ", WHITE: " + currentWhite);
     }
 
     /**

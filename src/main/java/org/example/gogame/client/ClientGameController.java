@@ -117,6 +117,8 @@ public class ClientGameController {
         }
         else if (message.startsWith("ERROR")) {
             view.setErr(message);
+        } else if (message.startsWith("NEGOTIATION")) {
+            view.negotiate(message.substring(11));
         }
     }
 
