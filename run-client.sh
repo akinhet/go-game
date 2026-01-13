@@ -1,0 +1,1 @@
+java -jar --module-path /usr/lib/jvm/java-24.0.2-openjfx/lib --add-modules javafx.controls,javafx.fxml ./target/go-client.jar

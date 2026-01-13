@@ -8,17 +8,16 @@ import java.net.Socket;
 
 /**
  * Controls the client-side game flow.
- * Bridges communication between the network (ServerListener) and the UI (ConsoleView).
+ * Bridges communication between the network (ServerListener) and the UI (GuiView).
  *
  * @author toBeSpecified
  */
 public class ClientGameController {
     private Socket socket;
     private PrintWriter out;
-    private ConsoleView view;
+    private GuiView view;
     private StoneColor myColor = StoneColor.EMPTY;
     private boolean isGameRunning = true;
-    private boolean myTurn = false;
 
     /**
      * Constructs the controller.
@@ -27,33 +26,26 @@ public class ClientGameController {
      * @param view The UI view to update.
      * @throws Exception If socket stream creation fails.
      */
-    public ClientGameController(Socket socket, ConsoleView view) throws Exception {
+    public ClientGameController(Socket socket, GuiView view) throws Exception {
         this.socket = socket;
         this.view = view;
         this.out = new PrintWriter(socket.getOutputStream(), true);
     }
 
     /**
-     * Starts the main game loop.
-     * Initializes the server listener thread and processes user input.
+     * Initializes the server listener thread.
      */
-    public void play() {
+    public void startListener() {
         ServerListener listener = null;
         try {
             listener = new ServerListener(socket.getInputStream(), this);
         } catch (IOException e) {
-            System.err.println("Client error: " + e.getMessage());
-            System.exit(1);
+            view.setErr("Client error: " + e.getMessage());
+            return;
         }
         Thread listenerThread = new Thread(listener);
+        listenerThread.setDaemon(true);
         listenerThread.start();
-
-        while (isGameRunning) {
-            String userInput = view.getUserInput();
-            handleUserInput(userInput);
-        }
-
-        closeConnection();
     }
 
     /**
@@ -62,16 +54,18 @@ public class ClientGameController {
      *
      * @param input The user input string.
      */
-    private void handleUserInput(String input) {
-        if (input == null) return;
+    public void handleUserInput(String input) {
+        if (!isGameRunning || input == null) return;
 
         if (input.equalsIgnoreCase("quit")) {
             out.println("QUIT");
             isGameRunning = false;
+            closeConnection();
+            System.exit(0);
         } else if (input.equalsIgnoreCase("pass")) {
             out.println("PASS");
         } else {
-
+            // Zakładamy format "x y"
             out.println("MOVE " + input);
         }
     }
@@ -83,9 +77,10 @@ public class ClientGameController {
      * @param message The raw message string from the server.
      */
     public synchronized void handleServerMessage(String message) {
+        System.out.println("Server: " + message);
+
         if (message.startsWith("MESSAGE")) {
             view.setMessage(message.substring(8));
-            view.displayBoard();
         }
         else if (message.startsWith("COLOR")) {
             String color = message.split(" ")[1];
@@ -93,9 +88,9 @@ public class ClientGameController {
             view.setColor(color);
         }
         else if (message.startsWith("TURN")) {
-            view.setTurn(StoneColor.valueOf(message.substring(5)) == myColor);
-            view.setMessage(message);
-            view.displayBoard();
+            boolean turn = StoneColor.valueOf(message.substring(5)) == myColor;
+            view.setTurn(turn);
+            view.setMessage(turn ? "Your Turn!" : "Opponent's Turn...");
         }
         else if (message.startsWith("MOVE")) {
             String[] parts = message.split(" ");
@@ -111,17 +106,13 @@ public class ClientGameController {
                 int y = Integer.parseInt(parts[i+1]);
                 view.updateBoard(x, y, StoneColor.EMPTY);
             }
-            view.displayBoard();
         }
         else if (message.startsWith("GAME_OVER")) {
             isGameRunning = false;
-            view.setMessage("!!! GAME OVER !!!\n" +
-                    message.substring(9));
-            view.displayBoard();
+            view.setMessage("GAME OVER: " + message.substring(9));
         }
         else if (message.startsWith("ERROR")) {
             view.setErr(message);
-            view.displayBoard();
         }
     }
 
@@ -131,6 +122,7 @@ public class ClientGameController {
     public void handleConnectionError() {
         isGameRunning = false;
         view.setMessage("Disconnected from server.");
+        view.setErr("Disconnected from server.");
     }
 
     /**
@@ -138,7 +130,9 @@ public class ClientGameController {
      */
     private void closeConnection() {
         try {
-            socket.close();
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
         } catch (Exception e) {
             // ignore
         }

@@ -1,32 +1,70 @@
 package org.example.gogame.client;
 
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.TextInputDialog;
+import javafx.stage.Stage;
+
 import java.net.Socket;
+import java.util.Optional;
 
-/**
- * Main entry point for the Go Game Client application.
- * Establishes connection to server and initializes the controller and view.
- *
- * @author toBeSpecified
- */
-public class GoClient {
-    /**
-     * Main method to start the client.
-     *
-     * @param args Command line arguments.
-     */
-    public static void main(String[] args) {
+public class GoClient extends Application {
+
+    @Override
+    public void start(Stage primaryStage) {
+        String serverAddress = askForServerAddress();
+        if (serverAddress == null) {
+            return;
+        }
+
         try {
-            System.out.println("Connecting to server...");
-            Socket socket = new Socket("localhost", 1111);
+            String[] parts = serverAddress.split(":");
+            String host = parts[0];
+            int port = Integer.parseInt(parts[1]);
 
-            ConsoleView view = new ConsoleView(19);
+            Socket socket = new Socket(host, port);
+
+            GuiView view = new GuiView(19);
             ClientGameController controller = new ClientGameController(socket, view);
 
-            controller.play();
+            view.setController(controller);
+
+            Scene scene = new Scene(view.getRoot(), 600, 700);
+            primaryStage.setTitle("Go Game Client - JavaFX");
+            primaryStage.setScene(scene);
+            primaryStage.setResizable(false);
+
+            primaryStage.setOnCloseRequest(e -> controller.handleUserInput("quit"));
+
+            primaryStage.show();
+
+            controller.startListener();
 
         } catch (Exception e) {
-            System.err.println("Client Error: " + e.getMessage());
-            e.printStackTrace();
+            showError("Connection Error", "Could not connect to server: " + e.getMessage());
         }
+    }
+
+    private String askForServerAddress() {
+        TextInputDialog dialog = new TextInputDialog("localhost:1111");
+        dialog.setTitle("Server Connection");
+        dialog.setHeaderText("Connect to Go Server");
+        dialog.setContentText("Please enter server address (host:port):");
+
+        Optional<String> result = dialog.showAndWait();
+        return result.orElse(null);
+    }
+
+    private void showError(String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }
