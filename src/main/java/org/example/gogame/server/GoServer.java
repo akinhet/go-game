@@ -6,11 +6,21 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-
+/**
+ * Main entry point for the Go Game Server.
+ * Listens for client connections and starts a new Game instance when two players connect.
+ *
+ * @author toBeSpecified
+ */
 public class GoServer {
 
     private static int port = 1111;
 
+    /**
+     * Starts the server.
+     *
+     * @param args Command line arguments (optional port number).
+     */
     public static void main(String[] args) {
         if (args.length == 1) {
             try {
@@ -25,6 +35,9 @@ public class GoServer {
         }
     }
 
+    /**
+     * Runs the server loop, accepting connections and pairing players.
+     */
     public void start() {
         System.out.println("Go Server is running on port " + port);
 

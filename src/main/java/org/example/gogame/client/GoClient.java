@@ -2,7 +2,18 @@ package org.example.gogame.client;
 
 import java.net.Socket;
 
+/**
+ * Main entry point for the Go Game Client application.
+ * Establishes connection to server and initializes the controller and view.
+ *
+ * @author toBeSpecified
+ */
 public class GoClient {
+    /**
+     * Main method to start the client.
+     *
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
         try {
             System.out.println("Connecting to server...");

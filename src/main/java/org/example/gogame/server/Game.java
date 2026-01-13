@@ -5,6 +5,12 @@ import org.example.gogame.StoneColor;
 
 import java.util.ArrayList;
 
+/**
+ * Manages the state and flow of a single Go game session.
+ * Handles turns, move processing, scoring, and communication between two players.
+ *
+ * @author toBeSpecified
+ */
 public class Game {
     private PlayerHandler blackPlayer;
     private PlayerHandler whitePlayer;
@@ -14,6 +20,14 @@ public class Game {
     private boolean gameOver = false;
     private int consecutivePasses = 0;
     private int[] lastMove = {-2,0};
+
+    /**
+     * Initializes a new game with two players and a board size.
+     *
+     * @param p1 The handler for the black player.
+     * @param p2 The handler for the white player.
+     * @param size The size of the board.
+     */
     public Game(PlayerHandler p1, PlayerHandler p2, int size) {
         this.blackPlayer = p1;
         this.whitePlayer = p2;
@@ -38,6 +52,15 @@ public class Game {
         BroadcastMessage("TURN BLACK");
     }
 
+    /**
+     * Processes a move attempt by a player.
+     * Validates the move, updates board state, handles captures, checks for Ko/Suicide,
+     * and broadcasts the result or error.
+     *
+     * @param x The x-coordinate.
+     * @param y The y-coordinate.
+     * @param player The player attempting the move.
+     */
     public synchronized void processMove(int x, int y, PlayerHandler player) {
         if (gameOver) {
             player.sendMessage("ERROR Game is over");
@@ -102,6 +125,13 @@ public class Game {
             player.sendMessage("ERROR Wait for your turn");
         }
     }
+
+    /**
+     * Processes a pass action by a player.
+     * Two consecutive passes end the game.
+     *
+     * @param player The player passing.
+     */
     public synchronized void processPass(PlayerHandler player) {
         if (currentPlayer != player) {
             player.sendMessage("ERROR Not your turn");
@@ -120,6 +150,11 @@ public class Game {
         BroadcastMessage("TURN " + currentPlayer.getColor().name());
     }
 
+    /**
+     * Handles a player quitting the game.
+     *
+     * @param player The player quitting.
+     */
     public synchronized void processQuit(PlayerHandler player) {
         BroadcastMessage("PLAYER_QUIT " + player.getColor().name());
         BroadcastMessage("GAME_OVER " +
@@ -127,14 +162,26 @@ public class Game {
                 "_WINS");
     }
 
+    /**
+     * Switches the current turn to the other player.
+     */
     private void switchTurn(){
         currentPlayer = (currentPlayer == blackPlayer ? whitePlayer : blackPlayer);
     }
+
+    /**
+     * Sends a message to both players.
+     *
+     * @param message The message to send.
+     */
     private void BroadcastMessage(String message){
         whitePlayer.sendMessage(message);
         blackPlayer.sendMessage(message);
     }
 
+    /**
+     * Ends the game, calculates scores, and broadcasts the result.
+     */
     private void endGame() {
         gameOver = true;
 
@@ -155,6 +202,13 @@ public class Game {
         BroadcastMessage(resultMessage);
     }
 
+    /**
+     * Calculates the score for a given color based on stones on the board.
+     * (Note: Basic implementation, does not count territory).
+     *
+     * @param color The stone color to count.
+     * @return The number of stones of that color on the board.
+     */
     private int calculateScore(StoneColor color) {
         int score = 0;
         for (int i = 0; i < board.getSize(); i++) {

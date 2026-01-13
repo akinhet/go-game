@@ -6,6 +6,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * Controls the client-side game flow.
+ * Bridges communication between the network (ServerListener) and the UI (ConsoleView).
+ *
+ * @author toBeSpecified
+ */
 public class ClientGameController {
     private Socket socket;
     private PrintWriter out;
@@ -14,12 +20,23 @@ public class ClientGameController {
     private boolean isGameRunning = true;
     private boolean myTurn = false;
 
+    /**
+     * Constructs the controller.
+     *
+     * @param socket The socket connected to the server.
+     * @param view The UI view to update.
+     * @throws Exception If socket stream creation fails.
+     */
     public ClientGameController(Socket socket, ConsoleView view) throws Exception {
         this.socket = socket;
         this.view = view;
         this.out = new PrintWriter(socket.getOutputStream(), true);
     }
 
+    /**
+     * Starts the main game loop.
+     * Initializes the server listener thread and processes user input.
+     */
     public void play() {
         ServerListener listener = null;
         try {
@@ -39,6 +56,12 @@ public class ClientGameController {
         closeConnection();
     }
 
+    /**
+     * Handles input received from the user via the view.
+     * Sends appropriate commands (QUIT, PASS, MOVE) to the server.
+     *
+     * @param input The user input string.
+     */
     private void handleUserInput(String input) {
         if (input == null) return;
 
@@ -53,6 +76,12 @@ public class ClientGameController {
         }
     }
 
+    /**
+     * Processes messages received from the server.
+     * Updates the view state accordingly.
+     *
+     * @param message The raw message string from the server.
+     */
     public synchronized void handleServerMessage(String message) {
         if (message.startsWith("MESSAGE")) {
             view.setMessage(message.substring(8));
@@ -96,11 +125,17 @@ public class ClientGameController {
         }
     }
 
+    /**
+     * Handles connection errors by stopping the game and notifying the user.
+     */
     public void handleConnectionError() {
         isGameRunning = false;
         view.setMessage("Disconnected from server.");
     }
 
+    /**
+     * Closes the socket connection.
+     */
     private void closeConnection() {
         try {
             socket.close();

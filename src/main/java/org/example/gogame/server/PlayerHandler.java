@@ -7,7 +7,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-
+/**
+ * Handles the network communication for a single player on the server side.
+ * Runs in a separate thread to listen for incoming commands.
+ *
+ * @author toBeSpecified
+ */
 public class PlayerHandler implements Runnable {
 
     private final Socket socket;
@@ -18,11 +23,20 @@ public class PlayerHandler implements Runnable {
 
     private StoneColor color;
 
+    /**
+     * Constructs a PlayerHandler.
+     *
+     * @param socket The client socket.
+     * @param color The assigned color for this player.
+     */
     public PlayerHandler(Socket socket, StoneColor color) {
         this.socket = socket;
         this.color = color;
     }
 
+    /**
+     * The main run loop. Listens for commands from the client and delegates to the Game instance.
+     */
     @Override
     public void run() {
         try {
@@ -39,11 +53,21 @@ public class PlayerHandler implements Runnable {
         }
     }
 
+    /**
+     * Initializes input and output streams for the socket.
+     *
+     * @throws IOException If stream creation fails.
+     */
     private void setupStreams() throws IOException {
         output = new PrintWriter(socket.getOutputStream(), true);
         input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
+    /**
+     * Parses and handles a command string received from the client.
+     *
+     * @param command The command string.
+     */
     private void handleCommand(String command) {
         if (game == null) {
             sendMessage("MESSAGE Waiting for opponent...");
@@ -72,12 +96,20 @@ public class PlayerHandler implements Runnable {
     }
     }
 
+    /**
+     * Sends a message to the client.
+     *
+     * @param message The message string to send.
+     */
     public void sendMessage(String message) {
         if (output != null) {
             output.println(message);
         }
     }
 
+    /**
+     * Closes the socket connection.
+     */
     private void closeConnection() {
         try {
             if (socket != null && !socket.isClosed()) {
@@ -88,14 +120,29 @@ public class PlayerHandler implements Runnable {
         }
     }
 
+    /**
+     * Associates this handler with a game instance.
+     *
+     * @param game The game instance.
+     */
     public void setGame(Game game) {
         this.game = game;
     }
 
+    /**
+     * Sets the player's stone color.
+     *
+     * @param color The stone color.
+     */
     public void setColor(StoneColor color) {
         this.color = color;
     }
 
+    /**
+     * Gets the player's stone color.
+     *
+     * @return The stone color.
+     */
     public StoneColor getColor() {
         return color;
     }

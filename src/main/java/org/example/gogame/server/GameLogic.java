@@ -7,13 +7,48 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Contains the rules and mechanics of the game of Go.
+ * Handles validation, liberty counting, capture logic, and Ko rule detection.
+ *
+ * @author toBeSpecified
+ */
 public class GameLogic {
+    /**
+     * Checks if the given coordinates are within the board boundaries.
+     *
+     * @param board The game board.
+     * @param x The x-coordinate.
+     * @param y The y-coordinate.
+     * @return true if coordinates are valid, false otherwise.
+     */
     private boolean inBounds(Board board, int x, int y){
         return x >= 0 && x < board.getSize() && y >= 0 && y < board.getSize();
     }
+
+    /**
+     * Validates if a move is structurally possible (in bounds and on an empty spot).
+     * Does not check for suicide or Ko.
+     *
+     * @param board The game board.
+     * @param x The x-coordinate.
+     * @param y The y-coordinate.
+     * @return true if the move is valid based on board state, false otherwise.
+     */
     public boolean validateMove(Board board, int x, int y){
         return inBounds(board,x,y) && board.getStone(x,y) == StoneColor.EMPTY;
     }
+
+    /**
+     * Counts the liberties of a connected chain of stones starting at (startX, startY).
+     * Uses a Breadth-First Search (BFS) approach.
+     *
+     * @param board The game board.
+     * @param startX The x-coordinate of a stone in the chain.
+     * @param startY The y-coordinate of a stone in the chain.
+     * @param color The color of the chain.
+     * @return The number of unique liberties (empty adjacent points) for the chain.
+     */
     public int countChainLiberties(Board board, int startX, int startY, StoneColor color) {
         Set<String> visited = new HashSet<>();
         Set<String> liberties = new HashSet<>();
@@ -48,6 +83,16 @@ public class GameLogic {
         }
         return liberties.size();
     }
+
+    /**
+     * Retrieves all stones belonging to the chain connected to (startX, startY).
+     *
+     * @param board The game board.
+     * @param startX The x-coordinate.
+     * @param startY The y-coordinate.
+     * @param color The color of the chain.
+     * @return A list of coordinates representing the stones in the chain.
+     */
     private ArrayList<int[]> getChain(Board board, int startX, int startY, StoneColor color) {
         Set<String> visited = new HashSet<>();
         ArrayList<int[]> chain = new ArrayList<>();
@@ -83,6 +128,15 @@ public class GameLogic {
         return chain;
     }
 
+    /**
+     * Checks if placing a stone at (x, y) captures any enemy chains.
+     *
+     * @param board The game board.
+     * @param x The x-coordinate of the placed stone.
+     * @param y The y-coordinate of the placed stone.
+     * @param color The color of the placed stone.
+     * @return A list of coordinates of captured stones.
+     */
     public ArrayList<int[]> checkCaptures(Board board, int x, int y, StoneColor color) {
         ArrayList<int[]> capturedStones = new ArrayList<>();
         StoneColor enemyColor = (color == StoneColor.BLACK ? StoneColor.WHITE : StoneColor.BLACK);
@@ -113,6 +167,17 @@ public class GameLogic {
         }
         return capturedStones;
     }
+
+    /**
+     * Performs a final check after captures to ensure the move is not suicide.
+     * A move is suicide if the placed stone has no liberties and captured nothing.
+     *
+     * @param board The game board.
+     * @param x The x-coordinate.
+     * @param y The y-coordinate.
+     * @param color The color of the stone.
+     * @return The color if valid, or {@link StoneColor#EMPTY} if it's a suicide move.
+     */
     public StoneColor finalCheck(Board board, int x, int y, StoneColor color) {
         int libs = countChainLiberties(board, x, y, color);
         if (libs == 0) {
@@ -120,6 +185,15 @@ public class GameLogic {
         }
         return color;
     }
+    /**
+     * Checks if the move violates the Ko rule (recreating the immediate previous board state).
+     *
+     * @param board The game board.
+     * @param lastMove The coordinates of the last single stone captured (used for simple Ko check).
+     * @param x The x-coordinate of the current move.
+     * @param y The y-coordinate of the current move.
+     * @return true if the move is Ko, false otherwise.
+     */
     public boolean isKo(Board board, int[] lastMove, int x, int y){
         if (lastMove[0] == x && lastMove[1] == y){
             return true;
