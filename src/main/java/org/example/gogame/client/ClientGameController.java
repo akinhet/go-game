@@ -64,6 +64,10 @@ public class ClientGameController {
             System.exit(0);
         } else if (input.equalsIgnoreCase("pass")) {
             out.println("PASS");
+        } else if (input.equalsIgnoreCase("resume")) {
+            out.println("RESUME");
+        } else if (input.equalsIgnoreCase("agree")) {
+            out.println("AGREE");
         } else {
             // Zakładamy format "x y"
             out.println("MOVE " + input);

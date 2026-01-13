@@ -14,6 +14,7 @@ import java.util.Set;
  * @author toBeSpecified
  */
 public class GameLogic {
+    private int regionSize = 0;
     /**
      * Checks if the given coordinates are within the board boundaries.
      *
@@ -201,4 +202,74 @@ public class GameLogic {
         return false;
 
     }
+    /**
+     * Calculates the territory score for both Black and White players.
+     * Iterates over the entire board to find empty regions and assigns them to a player
+     * if the region is completely enclosed by that player's stones.
+     *
+     * @param board The current state of the game board.
+     * @return An integer array where index 0 is Black's territory and index 1 is White's territory.
+     */
+    public int[] countTerritory(Board board) {
+        int blackTerritory = 0;
+        int whiteTerritory = 0;
+        int size = board.getSize();
+        boolean[][] visited = new boolean[size][size];
+
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                if (board.getStone(x, y) == StoneColor.EMPTY && !visited[x][y]) {
+                    StoneColor owner = checkRegionOwner(board, x, y, visited);
+                    if (owner == StoneColor.BLACK) blackTerritory += regionSize;
+                    if (owner == StoneColor.WHITE) whiteTerritory += regionSize;
+                }
+            }
+        }
+        return new int[]{blackTerritory, whiteTerritory};
+    }
+
+    /**
+     * Determines the owner of a contiguous region of empty intersections using BFS.
+     * A region is owned by a color if it only touches stones of that color.
+     * If it touches both colors, it is neutral (Dame).
+     *
+     * @param board   The game board.
+     * @param startX  The starting x-coordinate of the empty region.
+     * @param startY  The starting y-coordinate of the empty region.
+     * @param visited A matrix to keep track of visited nodes during territory counting.
+     * @return StoneColor.BLACK if owned by black, StoneColor.WHITE if owned by white, or StoneColor.EMPTY if neutral.
+     */
+    private StoneColor checkRegionOwner(Board board, int startX, int startY, boolean[][] visited) {
+        ArrayList<int[]> queue = new ArrayList<>();
+        queue.add(new int[]{startX, startY});
+        visited[startX][startY] = true;
+        regionSize = 0;
+
+        boolean touchesBlack = false;
+        boolean touchesWhite = false;
+
+        while(!queue.isEmpty()) {
+            int[] curr = queue.remove(0);
+            regionSize++;
+
+            int[][] dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+            for(int[] d : dirs) {
+                int nx = curr[0] + d[0];
+                int ny = curr[1] + d[1];
+                if(nx >= 0 && nx < board.getSize() && ny >= 0 && ny < board.getSize()) {
+                    StoneColor stone = board.getStone(nx, ny);
+                    if(stone == StoneColor.EMPTY && !visited[nx][ny]) {
+                        visited[nx][ny] = true;
+                        queue.add(new int[]{nx, ny});
+                    } else if(stone == StoneColor.BLACK) touchesBlack = true;
+                    else if(stone == StoneColor.WHITE) touchesWhite = true;
+                }
+            }
+        }
+
+        if(touchesBlack && !touchesWhite) return StoneColor.BLACK;
+        if(!touchesBlack && touchesWhite) return StoneColor.WHITE;
+        return StoneColor.EMPTY;
+    }
+
 }

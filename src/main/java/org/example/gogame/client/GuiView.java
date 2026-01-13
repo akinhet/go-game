@@ -15,6 +15,12 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import org.example.gogame.StoneColor;
 
+/**
+ * Represents the Graphical User Interface (GUI) for the Go game.
+ * Handles the display of the board, stones, and status messages using JavaFX.
+ *
+ * @author toBeSpecified
+ */
 public class GuiView {
     private final int size;
     private final BorderPane root;
@@ -28,6 +34,12 @@ public class GuiView {
     private static final int CELL_SIZE = 30;
     private static final int PADDING = 20;
 
+    /**
+     * Constructs the GUI View.
+     * Initializes the board array and sets up the initial UI layout.
+     *
+     * @param size The size of the game board (e.g., 19 for a 19x19 board).
+     */
     public GuiView(int size) {
         this.size = size;
         this.root = new BorderPane();
@@ -39,14 +51,29 @@ public class GuiView {
         setupUI();
     }
 
+    /**
+     * Sets the controller responsible for handling user actions from this view.
+     *
+     * @param controller The game controller instance.
+     */
     public void setController(ClientGameController controller) {
         this.controller = controller;
     }
 
+    /**
+     * Retrieves the root layout node of the scene graph.
+     *
+     * @return The parent root node containing the game UI.
+     */
     public Parent getRoot() {
         return root;
     }
 
+    /**
+     * Configures the visual components of the user interface.
+     * Draws the grid lines, background, and initializes invisible stone shapes
+     * for interaction.
+     */
     private void setupUI() {
         int boardPixelSize = (size - 1) * CELL_SIZE + 2 * PADDING;
         boardPane.setPrefSize(boardPixelSize, boardPixelSize);
@@ -105,12 +132,27 @@ public class GuiView {
         root.setTop(topPanel);
     }
 
+    /**
+     * Handles the user interaction when a specific intersection on the board is clicked.
+     * Converts the click into coordinates and forwards the move command to the controller.
+     *
+     * @param x The x-coordinate of the clicked intersection.
+     * @param y The y-coordinate of the clicked intersection.
+     */
     private void handleBoardClick(int x, int y) {
         if (controller != null) {
             controller.handleUserInput(x + " " + y);
         }
     }
 
+    /**
+     * Updates the visual state of a specific intersection on the board.
+     * This method ensures the update is run on the JavaFX Application Thread.
+     *
+     * @param x     The x-coordinate of the stone.
+     * @param y     The y-coordinate of the stone.
+     * @param color The color to display (BLACK, WHITE, or EMPTY to clear).
+     */
     public void updateBoard(int x, int y, StoneColor color) {
         Platform.runLater(() -> {
             if (x >= 0 && x < size && y >= 0 && y < size) {
@@ -126,10 +168,20 @@ public class GuiView {
         });
     }
 
+    /**
+     * Updates the status message displayed at the top of the window.
+     *
+     * @param msg The message string to display.
+     */
     public void setMessage(String msg) {
         Platform.runLater(() -> statusLabel.setText(msg));
     }
 
+    /**
+     * Sets the label indicating the player's assigned color.
+     *
+     * @param color The name of the color (e.g., "BLACK" or "WHITE").
+     */
     public void setColor(String color) {
         Platform.runLater(() -> {
             statusLabel.setText("You are playing as: " + color);
@@ -137,6 +189,12 @@ public class GuiView {
         });
     }
 
+    /**
+     * Visually indicates whether it is currently this player's turn.
+     * Changes the border color of the board to green if true.
+     *
+     * @param myTurn true if it is the player's turn, false otherwise.
+     */
     public void setTurn(boolean myTurn) {
         Platform.runLater(() -> {
             if (myTurn) {
@@ -147,6 +205,11 @@ public class GuiView {
         });
     }
 
+    /**
+     * Displays an error popup to the user containing a message from the server.
+     *
+     * @param err The error message text.
+     */
     public void setErr(String err) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);

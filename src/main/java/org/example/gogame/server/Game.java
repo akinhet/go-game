@@ -18,8 +18,12 @@ public class Game {
     private Board board;
     private GameLogic gameLogic;
     private boolean gameOver = false;
+    private boolean isUnderNegotiation = false;
+    private boolean[] playerAgreed = {false, false};
     private int consecutivePasses = 0;
     private int[] lastMove = {-2,0};
+    private int blackPrisoners = 0;
+    private int whitePrisoners = 0;
 
     /**
      * Initializes a new game with two players and a board size.
@@ -66,6 +70,10 @@ public class Game {
             player.sendMessage("ERROR Game is over");
             return;
         }
+        if (isUnderNegotiation) {
+            player.sendMessage("ERROR Game stopped. Type AGREE or RESUME.");
+            return;
+        }
         consecutivePasses = 0;
         ArrayList<int[]> captures;
         StoneColor finalform;
@@ -77,6 +85,13 @@ public class Game {
                     captures = gameLogic.checkCaptures(board, x, y, player.getColor());
                     for (int[] capture : captures) {
                         board.removeStone(capture[0], capture[1]);
+                    }
+                    if (!captures.isEmpty()) {
+                        if (player.getColor() == StoneColor.BLACK) {
+                            blackPrisoners += captures.size();
+                        } else {
+                            whitePrisoners += captures.size();
+                        }
                     }
                     if (captures.size()==1 && gameLogic.countChainLiberties(board,x,y,player.getColor()) == 1){
                         lastMove = new int[]{captures.get(0)[0],captures.get(0)[1]};
@@ -137,17 +152,87 @@ public class Game {
             player.sendMessage("ERROR Not your turn");
             return;
         }
+        if (isUnderNegotiation) {
+            player.sendMessage("ERROR Game stopped. Type AGREE or RESUME.");
+        }
 
         BroadcastMessage("PASS " + player.getColor().name());
         consecutivePasses++;
-
         if (consecutivePasses >= 2) {
-            endGame();
+            startNegotiationPhase();
+        }else {
+            switchTurn();
+            BroadcastMessage("TURN " + currentPlayer.getColor().name());
+        }
+    }
+
+    /**
+     * Initiates the negotiation phase after two consecutive passes.
+     * Calculates the current territory (including prisoners) and suggests a score to both players.
+     * Players are prompted to either AGREE to the score or RESUME play.
+     */
+    private void startNegotiationPhase() {
+        isUnderNegotiation = true;
+        playerAgreed[0] = false; // Black
+        playerAgreed[1] = false; // White
+
+        int[] territory = gameLogic.countTerritory(board);
+        int currentBlack = territory[0] + blackPrisoners;
+        int currentWhite = territory[1] + whitePrisoners;
+
+        BroadcastMessage("MESSAGE Game stopped. Removing dead stones phase.");
+        BroadcastMessage("MESSAGE Suggested Score -> BLACK: " + currentBlack + ", WHITE: " + currentWhite);
+        BroadcastMessage("MESSAGE Type 'AGREE' to finish or 'RESUME' to continue playing.");
+    }
+
+    /**
+     * Process a player's request to resume the game during the negotiation phase.
+     * If one player disagrees with the calculated score/dead stones, the game continues.
+     *
+     * @param player The player requesting to resume.
+     */
+    public synchronized void processResume(PlayerHandler player) {
+        if (!isUnderNegotiation) {
+            player.sendMessage("ERROR Game is not paused.");
+            return;
+        }
+        isUnderNegotiation = false;
+        consecutivePasses = 0;
+        playerAgreed[0] = false;
+        playerAgreed[1] = false;
+
+        BroadcastMessage("MESSAGE Game Resumed by " + player.getColor());
+
+        if (player == blackPlayer) {
+            currentPlayer = whitePlayer;
+        } else {
+            currentPlayer = blackPlayer;
+        }
+
+        BroadcastMessage("TURN " + currentPlayer.getColor().name());
+    }
+
+    /**
+     * Handles a player's agreement to the proposed game result during negotiation.
+     * If both players agree, the game ends and the final result is broadcast.
+     *
+     * @param player The player sending the agreement.
+     */
+    public synchronized void processAgree(PlayerHandler player) {
+        if (!isUnderNegotiation) {
+            player.sendMessage("ERROR Game is still running. Pass to stop.");
             return;
         }
 
-        switchTurn();
-        BroadcastMessage("TURN " + currentPlayer.getColor().name());
+        int index = (player.getColor() == StoneColor.BLACK) ? 0 : 1;
+        if (!playerAgreed[index]) {
+            playerAgreed[index] = true;
+            BroadcastMessage("MESSAGE " + player.getColor() + " agreed to end.");
+        }
+
+        if (playerAgreed[0] && playerAgreed[1]) {
+            endGame();
+        }
     }
 
     /**
@@ -185,15 +270,16 @@ public class Game {
     private void endGame() {
         gameOver = true;
 
-        int blackScore = calculateScore(StoneColor.BLACK);
-        int whiteScore = calculateScore(StoneColor.WHITE);
+        int[] territory = gameLogic.countTerritory(board);
+        int blackTotal = territory[0] + blackPrisoners;
+        int whiteTotal = territory[1] + whitePrisoners;
 
-        String resultMessage = "GAME_OVER SCORE BLACK:" + blackScore +
-                " WHITE:" + whiteScore + " ";
+        String resultMessage = "GAME_OVER SCORE BLACK:" + blackTotal +
+                " WHITE:" + whiteTotal + " ";
 
-        if (blackScore > whiteScore) {
+        if (blackTotal > whiteTotal) {
             resultMessage += "BLACK_WINS";
-        } else if (whiteScore > blackScore) {
+        } else if (whiteTotal > blackTotal) {
             resultMessage += "WHITE_WINS";
         } else {
             resultMessage += "DRAW";
@@ -202,22 +288,4 @@ public class Game {
         BroadcastMessage(resultMessage);
     }
 
-    /**
-     * Calculates the score for a given color based on stones on the board.
-     * (Note: Basic implementation, does not count territory).
-     *
-     * @param color The stone color to count.
-     * @return The number of stones of that color on the board.
-     */
-    private int calculateScore(StoneColor color) {
-        int score = 0;
-        for (int i = 0; i < board.getSize(); i++) {
-            for (int j = 0; j < board.getSize(); j++) {
-                if (board.getStone(i, j) == color) {
-                    score++;
-                }
-            }
-        }
-        return score;
-    }
 }
