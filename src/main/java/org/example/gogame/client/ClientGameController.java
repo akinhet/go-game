@@ -68,6 +68,8 @@ public class ClientGameController {
             out.println("RESUME");
         } else if (input.equalsIgnoreCase("agree")) {
             out.println("AGREE");
+        } else if (input.equalsIgnoreCase("negotiation")) {
+            out.println("NEGOTIATION");
         } else {
             // Zakładamy format "x y"
             out.println("MOVE " + input);

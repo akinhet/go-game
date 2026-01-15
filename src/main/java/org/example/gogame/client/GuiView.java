@@ -130,8 +130,12 @@ public class GuiView {
         passBtn.setOnAction(e -> {
             if (controller != null) controller.handleUserInput("pass");
         });
+        Button negoBtn = new Button("NEGOTIATE");
+        negoBtn.setOnAction(e -> {
+            if (controller != null) controller.handleUserInput("negotiation");
+        });
 
-        topPanel.getChildren().addAll(colorLabel, passBtn);
+        topPanel.getChildren().addAll(colorLabel, passBtn, negoBtn);
         root.setTop(topPanel);
     }
 

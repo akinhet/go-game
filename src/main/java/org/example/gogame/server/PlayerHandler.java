@@ -95,6 +95,8 @@ public class PlayerHandler implements Runnable {
             game.processResume(this);
         } else if (command.equals("AGREE")) {
             game.processAgree(this);
+        } else if (command.equals("NEGOTIATION")){
+            game.processNegotiation(this);
         } else {
             sendMessage("ERROR Unknown command");
     }

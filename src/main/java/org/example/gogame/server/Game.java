@@ -71,7 +71,24 @@ public class Game {
             return;
         }
         if (isUnderNegotiation) {
-            player.sendMessage("ERROR Game stopped. Type AGREE or RESUME.");
+            if (board.getStone(x,y)==StoneColor.BLACK){
+                whitePrisoners++;
+            }else if (board.getStone(x,y) == StoneColor.WHITE){
+                blackPrisoners++;
+            }else {return;}
+            board.setStone(x,y,StoneColor.EMPTY);
+            StringBuilder moveMessage = new StringBuilder();
+            moveMessage.append("MOVE ")
+                    .append(x).append(" ")
+                    .append(y).append(" ")
+                    .append(StoneColor.EMPTY.name());
+            BroadcastMessage(moveMessage.toString());
+            int[] territory = gameLogic.countTerritory(board);
+            int currentBlack = territory[0] + blackPrisoners;
+            int currentWhite = territory[1] + whitePrisoners;
+
+            BroadcastMessage("MESSAGE New score -> BLACK: " + currentBlack + ", WHITE: " + currentWhite);
+
             return;
         }
         consecutivePasses = 0;
@@ -153,7 +170,7 @@ public class Game {
             return;
         }
         if (isUnderNegotiation) {
-            player.sendMessage("ERROR Game stopped. Type AGREE or RESUME.");
+            player.sendMessage("ERROR Game stopped.");
         }
 
         BroadcastMessage("PASS " + player.getColor().name());
@@ -180,7 +197,17 @@ public class Game {
         int currentBlack = territory[0] + blackPrisoners;
         int currentWhite = territory[1] + whitePrisoners;
 
-        BroadcastMessage("NEGOTIATION Suggested Score -> BLACK: " + currentBlack + ", WHITE: " + currentWhite);
+        BroadcastMessage("MESSAGE Suggested Score -> BLACK: " + currentBlack + ", WHITE: " + currentWhite);
+    }
+    public synchronized void processNegotiation(PlayerHandler player){
+        if (!isUnderNegotiation){
+            player.sendMessage("ERROR Game is not paused");
+            return;
+        }
+        int[] territory = gameLogic.countTerritory(board);
+        int currentBlack = territory[0] + blackPrisoners;
+        int currentWhite = territory[1] + whitePrisoners;
+        BroadcastMessage("NEGOTIATION Score after negotiation -> BLACK: " + currentBlack + "| WHITE: " + currentWhite);
     }
 
     /**
