@@ -14,7 +14,7 @@ import java.util.Set;
  * @author Piotr Zieniewicz, Jan Langier
  */
 public class GameLogic {
-    private int regionSize = 0;
+    private int regionSize = 0; //Variable used while calculating points for territory
     /**
      * Checks if the given coordinates are within the board boundaries.
      *
@@ -51,17 +51,18 @@ public class GameLogic {
      * @return The number of unique liberties (empty adjacent points) for the chain.
      */
     public int countChainLiberties(Board board, int startX, int startY, StoneColor color) {
-        Set<String> visited = new HashSet<>();
-        Set<String> liberties = new HashSet<>();
-        ArrayList<int[]> stack = new ArrayList<>();
+        Set<String> visited = new HashSet<>(); //HashSet punktów które zostały odwiedzone, aby uniknąć duplikacji
+        Set<String> liberties = new HashSet<>(); //HashSet z unikalnymi oddechami aby uniknąć dodania dwa razy tego samego oddechu
+        ArrayList<int[]> stack = new ArrayList<>(); //Stos dla algorytmu Flood Fill
 
         stack.add(new int[]{startX, startY});
         visited.add(startX + "," + startY);
 
         int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
+        //Wykonujemy do momentu aż na stosie skończą się elementy
         while (!stack.isEmpty()) {
-            int[] current = stack.remove(stack.size() - 1);
+            int[] current = stack.remove(stack.size() - 1); //Usuwamy pierwszy element ze stostu i sprawdzamy punkty obok tego elementu
             int cx = current[0];
             int cy = current[1];
 
@@ -72,10 +73,11 @@ public class GameLogic {
                 if (inBounds(board, nx, ny)) {
                     StoneColor neighborColor = board.getStone(nx, ny);
                     String key = nx + "," + ny;
-
+                    //jeżeli jest pusty punkt to dodajemy oddech
                     if (neighborColor == StoneColor.EMPTY) {
                         liberties.add(key);
                     } else if (neighborColor == color && !visited.contains(key)) {
+                        //jeżeli znajdujemy kamień tego samego koloru to dodajemy go do stosu
                         visited.add(key);
                         stack.add(new int[]{nx, ny});
                     }
@@ -95,9 +97,9 @@ public class GameLogic {
      * @return A list of coordinates representing the stones in the chain.
      */
     private ArrayList<int[]> getChain(Board board, int startX, int startY, StoneColor color) {
-        Set<String> visited = new HashSet<>();
-        ArrayList<int[]> chain = new ArrayList<>();
-        ArrayList<int[]> stack = new ArrayList<>();
+        Set<String> visited = new HashSet<>(); //HashSet punktów które zostały odwiedzone, aby uniknąć duplikacji
+        ArrayList<int[]> chain = new ArrayList<>(); //Punkty należące do łańcucha
+        ArrayList<int[]> stack = new ArrayList<>(); //Stos dla algorytmu Flood Fill
 
         stack.add(new int[]{startX, startY});
         visited.add(startX + "," + startY);
@@ -110,11 +112,13 @@ public class GameLogic {
             int cx = current[0];
             int cy = current[1];
 
+            // Sprawdzamy wszystkie punkty obok
             for (int[] dir : directions) {
                 int nx = cx + dir[0];
                 int ny = cy + dir[1];
                 String key = nx + "," + ny;
 
+                //jeżeli w granicach i kolor się zgadza to dodajemy do stosu, visited i łańcucha
                 if (inBounds(board, nx, ny) &&
                         board.getStone(nx, ny) == color &&
                         !visited.contains(key)) {
@@ -139,28 +143,29 @@ public class GameLogic {
      * @return A list of coordinates of captured stones.
      */
     public ArrayList<int[]> checkCaptures(Board board, int x, int y, StoneColor color) {
-        ArrayList<int[]> capturedStones = new ArrayList<>();
+        ArrayList<int[]> capturedStones = new ArrayList<>(); //Punkty które zostaną zbite
         StoneColor enemyColor = (color == StoneColor.BLACK ? StoneColor.WHITE : StoneColor.BLACK);
         int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
-        Set<String> visitedEnemies = new HashSet<>();
+        Set<String> visitedEnemies = new HashSet<>(); //HashSet napotkanych wrogów aby uniknąć duplikatów przy sprawdzaniu
 
         for (int[] dir : directions) {
             int nx = x + dir[0];
             int ny = y + dir[1];
             String key = nx + "," + ny;
 
+            //Sprawdzamy każdy kamień dookoła, jeżeli znajdujemy kamień przeciwnika
             if (inBounds(board, nx, ny) && board.getStone(nx, ny) == enemyColor) {
                 if (!visitedEnemies.contains(key)) {
 
-                    int libs = countChainLiberties(board, nx, ny, enemyColor);
+                    int libs = countChainLiberties(board, nx, ny, enemyColor);//liczymy jego oddechy
 
-                    ArrayList<int[]> enemyChain = getChain(board, nx, ny, enemyColor);
+                    ArrayList<int[]> enemyChain = getChain(board, nx, ny, enemyColor); //znajdujemy punkty łańcucha przeciwnika
                     for(int[] stone : enemyChain) {
                         visitedEnemies.add(stone[0] + "," + stone[1]);
                     }
 
-                    if (libs == 0) {
+                    if (libs == 0) { //jeżeli oddechy tego łańcucha są równe 0 dodajemy cały łańcuch do zdobytych kamieni przeciwnika
                         capturedStones.addAll(enemyChain);
                     }
                 }
@@ -216,10 +221,11 @@ public class GameLogic {
         int size = board.getSize();
         boolean[][] visited = new boolean[size][size];
 
+        //iteruje po całej planszy
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 if (board.getStone(x, y) == StoneColor.EMPTY && !visited[x][y]) {
-                    StoneColor owner = checkRegionOwner(board, x, y, visited);
+                    StoneColor owner = checkRegionOwner(board, x, y, visited); //Sprawdza właściciela terytorium
                     if (owner == StoneColor.BLACK) blackTerritory += regionSize;
                     if (owner == StoneColor.WHITE) whiteTerritory += regionSize;
                 }
@@ -240,11 +246,12 @@ public class GameLogic {
      * @return StoneColor.BLACK if owned by black, StoneColor.WHITE if owned by white, or StoneColor.EMPTY if neutral.
      */
     private StoneColor checkRegionOwner(Board board, int startX, int startY, boolean[][] visited) {
-        ArrayList<int[]> queue = new ArrayList<>();
+        ArrayList<int[]> queue = new ArrayList<>(); //Stos dla algorytmu Flood Fill
         queue.add(new int[]{startX, startY});
         visited[startX][startY] = true;
         regionSize = 0;
 
+        //Flagi czy region dotyka danego koloru
         boolean touchesBlack = false;
         boolean touchesWhite = false;
 
@@ -253,11 +260,13 @@ public class GameLogic {
             regionSize++;
 
             int[][] dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+            //Sprawdzamy każdy punkt obok
             for(int[] d : dirs) {
                 int nx = curr[0] + d[0];
                 int ny = curr[1] + d[1];
                 if(nx >= 0 && nx < board.getSize() && ny >= 0 && ny < board.getSize()) {
                     StoneColor stone = board.getStone(nx, ny);
+                    //Sprawdzenie z kim sąsiaduje, jeżeli z pustym to dodaje go do stosu aby był sprawdzony w następnym kroku
                     if(stone == StoneColor.EMPTY && !visited[nx][ny]) {
                         visited[nx][ny] = true;
                         queue.add(new int[]{nx, ny});

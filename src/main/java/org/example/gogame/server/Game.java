@@ -103,11 +103,11 @@ public class Game {
         ArrayList<int[]> captures;
         StoneColor finalform;
         if (currentPlayer == player) {
-            if (gameLogic.validateMove(board, x, y)) {
-                if (!gameLogic.isKo(board,lastMove,x,y)){
-                    board.setStone(x, y, player.getColor());
+            if (gameLogic.validateMove(board, x, y)) { //Sprawdzenie czy ruch jest w granicach i na pustym miejscu
+                if (!gameLogic.isKo(board,lastMove,x,y)){ //Sprawdzenie czy ruch jest Ko
+                    board.setStone(x, y, player.getColor()); //Ustawia kamień na planszy
 
-                    captures = gameLogic.checkCaptures(board, x, y, player.getColor());
+                    captures = gameLogic.checkCaptures(board, x, y, player.getColor()); //Ustawia zbite kamienie
                     for (int[] capture : captures) {
                         board.removeStone(capture[0], capture[1]);
                     }
@@ -124,7 +124,7 @@ public class Game {
                         lastMove = new int[]{-2,0};
                     }
 
-                    finalform = gameLogic.finalCheck(board, x, y, player.getColor());
+                    finalform = gameLogic.finalCheck(board, x, y, player.getColor()); //Sprawdza oddechy łańcucha z dodanym kamieniem po sprawdzeniu czy ruch zbija przeciwnika
                     if (finalform == StoneColor.EMPTY){
                         board.removeStone(x,y);
                         StoneColor enemy = (player.getColor() == StoneColor.BLACK ? StoneColor.WHITE : StoneColor.BLACK);
@@ -197,6 +197,8 @@ public class Game {
      * Players are prompted to either AGREE to the score or RESUME play.
      */
     private void startNegotiationPhase() {
+        removedWhite = 0;
+        removedBlack = 0;
         removed.clear();
         isUnderNegotiation = true;
         playerAgreed[0] = false; // Black
@@ -208,6 +210,13 @@ public class Game {
 
         BroadcastMessage("MESSAGE Suggested Score -> BLACK: " + currentBlack + ", WHITE: " + currentWhite);
     }
+
+    /**
+     * Process a player's request to finish game after removing stones during the negotiation phase.
+     * Counts score and send it to both players.
+     *
+     * @param player Player requesting to negotiate
+     */
     public synchronized void processNegotiation(PlayerHandler player){
         if (!isUnderNegotiation){
             player.sendMessage("ERROR Game is not paused");
