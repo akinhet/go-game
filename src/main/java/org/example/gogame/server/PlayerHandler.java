@@ -135,6 +135,9 @@ public class PlayerHandler implements Runnable {
         this.game = game;
     }
 
+    public Game getGame(){
+        return game;
+    }
     /**
      * Sets the player's stone color.
      *
