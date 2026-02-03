@@ -28,3 +28,5 @@ target/
 go-game.iml
 .settings/
 .project
+.classpath
+bin/
