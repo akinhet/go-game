@@ -48,7 +48,7 @@ public class Review implements Runnable {
                 List<Move> moves = gService.getMovesForReplay(gameId);
                 moves.sort(Comparator.comparingInt(Move::getMoveNumber));
 
-                int currentMoveIndex = 1;
+                int currentMoveIndex = 0;
                 String command;
 
                 while ((command = input.readLine()) != null) {

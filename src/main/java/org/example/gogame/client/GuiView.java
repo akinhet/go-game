@@ -137,7 +137,6 @@ public class GuiView {
         nxtBtn.setOnAction(e -> {
 
             if (controller != null) {
-                nxtBtn.setDisable(true);
                 controller.requestNextMove();
             }
         });
@@ -255,11 +254,6 @@ public class GuiView {
                 controller.handleUserInput("RESUME");
         });
     }
-    public void enableNextMoveButton(){
-        Platform.runLater(() -> {
-            nxtBtn.setDisable(false);
-        });
-    }
 
     /**
      * Pokazuje popup z listą gier do wyboru
@@ -284,7 +278,7 @@ public class GuiView {
                 setupUI();
                 nxtBtn.setVisible(true);
                 nxtBtn.setDisable(false);
-                setMessage("Tryb Review: Kliknij 'Następny ruch'");
+                setMessage("Tryb Review: Kliknij 'NEXT MOVE >>'");
 
                 controller.sendChosenGameId(gameId);
             });

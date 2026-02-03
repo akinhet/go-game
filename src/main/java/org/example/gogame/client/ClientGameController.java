@@ -127,8 +127,6 @@ public class ClientGameController {
             int y = Integer.parseInt(parts[2]);
             String color = parts[3];
             view.updateBoard(x, y, StoneColor.valueOf(color));
-
-            view.enableNextMoveButton();
         }
         else if (message.startsWith("CAPTURES")) {
             String[] parts = message.split(" ");
