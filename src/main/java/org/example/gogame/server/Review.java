@@ -52,13 +52,18 @@ public class Review implements Runnable {
                 String command;
 
                 while ((command = input.readLine()) != null) {
-                    if (currentMoveIndex < moves.size()) {
+                    if (currentMoveIndex < moves.size()-1) {
                         Move move = moves.get(currentMoveIndex);
 
                         output.println(move.getMoveString());
 
                         currentMoveIndex++;
+                        Move capture = moves.get(currentMoveIndex);
+                        output.println(capture.getMoveString());
+                        currentMoveIndex++;
                     } else {
+                        Move score = moves.get(currentMoveIndex);
+                        output.println(score.getMoveString());
                         output.println("END_GAME");
                         break;
                     }
