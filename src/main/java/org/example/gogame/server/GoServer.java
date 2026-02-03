@@ -78,10 +78,14 @@ public class GoServer implements CommandLineRunner {
                         switch (b) {
                             case 1: // review
                                 System.out.println("review");
+                                Review review = new Review(socket, gService);
+                                new Thread(review).start();
                             break;
+
                             case 2: // bot
                                 System.out.println("bot");
                             break;
+
                             default: // game
                                 synchronized(lock) {
                                     if (waitingForGame != null) {

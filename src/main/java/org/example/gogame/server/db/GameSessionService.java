@@ -43,4 +43,8 @@ public class GameSessionService {
 
         return sortedMoves;
     }
+
+    public List<GameSession> getAllGames() {
+        return gameRepository.findAll();
+    }
 }

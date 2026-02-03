@@ -30,5 +30,7 @@ public class GameSession {
 
     public List<Move> getMoves() { return moves; }
     public void setWinner(StoneColor w) { this.winner = w; }
+    public LocalDateTime getDatePlayed() { return datePlayed; }
+    public StoneColor getWinner() { return winner; }
     public Long getId() { return id; }
 }
