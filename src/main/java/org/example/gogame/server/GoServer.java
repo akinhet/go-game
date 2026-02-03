@@ -83,8 +83,11 @@ public class GoServer implements CommandLineRunner {
                             break;
 
                             case 2: // bot
-                                System.out.println("bot");
-                            break;
+                                PlayerHandler player1 = new PlayerHandler(socket, StoneColor.BLACK);
+                                BotPlayerHandler bot = new BotPlayerHandler(StoneColor.WHITE);
+                                Game botgame = new Game(player1, bot, 19, gService);
+
+                                break;
 
                             default: // game
                                 synchronized(lock) {
