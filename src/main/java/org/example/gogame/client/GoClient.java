@@ -3,9 +3,11 @@ package org.example.gogame.client;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.TextInputDialog;
 import javafx.stage.Stage;
 
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Optional;
 /**
@@ -32,12 +34,26 @@ public class GoClient extends Application {
             return;
         }
 
+        String choice = askForGameMode();
+        if (choice == null)
+            return;
+
+        int mode = 0;
+        switch (choice) {
+            case "Review" -> mode = 1;
+            case "Bot" -> mode = 2;
+            default -> mode = 0;
+        }
+
         try {
             String[] parts = serverAddress.split(":");
             String host = parts[0];
             int port = Integer.parseInt(parts[1]);
 
             Socket socket = new Socket(host, port);
+            OutputStream os = socket.getOutputStream();
+            os.write(mode);
+            os.flush();
 
             GuiView view = new GuiView(19);
             ClientGameController controller = new ClientGameController(socket, view);
@@ -71,6 +87,23 @@ public class GoClient extends Application {
         dialog.setTitle("Server Connection");
         dialog.setHeaderText("Connect to Go Server");
         dialog.setContentText("Please enter server address (host:port):");
+
+        Optional<String> result = dialog.showAndWait();
+        return result.orElse(null);
+    }
+
+    /**
+     * Displays a dialog prompt asking the user for the server address.
+     * Defaults to "localhost:1111".
+     *
+     * @return A string containing "host:port", or null if the user cancelled.
+     */
+    private String askForGameMode() {
+        String[] gamemodes = {"Player", "Bot", "Review"};
+        ChoiceDialog<String> dialog = new ChoiceDialog<String>(gamemodes[0], gamemodes);
+        dialog.setTitle("Game mode choice");
+        dialog.setHeaderText("Choose the game mode");
+        dialog.setContentText("Choose one of the game modes: ");
 
         Optional<String> result = dialog.showAndWait();
         return result.orElse(null);

@@ -2,6 +2,8 @@ package org.example.gogame.server;
 
 import org.example.gogame.Board;
 import org.example.gogame.StoneColor;
+import org.example.gogame.server.db.GameSessionService;
+import org.example.gogame.server.db.Move;
 
 import java.util.ArrayList;
 
@@ -27,6 +29,10 @@ public class Game {
     private ArrayList<String> removed = new ArrayList<>();
     private int removedWhite = 0;
     private int removedBlack = 0;
+    private ArrayList<Move> currentSessionMoves = new ArrayList<>();
+    private int moveCounter = 1;
+    private ArrayList<Integer> tempMoveNegotiations = new ArrayList<>();
+    private GameSessionService gService;
 
     /**
      * Initializes a new game with two players and a board size.
@@ -35,12 +41,13 @@ public class Game {
      * @param p2 The handler for the white player.
      * @param size The size of the board.
      */
-    public Game(PlayerHandler p1, PlayerHandler p2, int size) {
+    public Game(PlayerHandler p1, PlayerHandler p2, int size, GameSessionService gService) {
         this.blackPlayer = p1;
         this.whitePlayer = p2;
         this.currentPlayer = blackPlayer;
         this.board = new Board(size);
         this.gameLogic = new GameLogic();
+        this.gService = gService;
 
         blackPlayer.setGame(this);
         whitePlayer.setGame(this);
@@ -141,6 +148,7 @@ public class Game {
                                 .append(player.getColor().name());
 
                         BroadcastMessage(moveMessage.toString());
+                        currentSessionMoves.add(new Move(moveCounter++, moveMessage.toString()));
 
                         moveMessage = new StringBuilder();
                         moveMessage.append("CAPTURES");
@@ -151,6 +159,7 @@ public class Game {
                             }
                         }
                         BroadcastMessage(moveMessage.toString());
+                        currentSessionMoves.add(new Move(moveCounter++, moveMessage.toString()));
                         switchTurn();
                         BroadcastMessage("TURN " + currentPlayer.getColor().name());
                     }
@@ -330,15 +339,21 @@ public class Game {
         String resultMessage = "GAME_OVER SCORE BLACK:" + blackTotal +
                 " WHITE:" + whiteTotal + " ";
 
+        StoneColor winner;
         if (blackTotal > whiteTotal) {
             resultMessage += "BLACK_WINS";
+            winner = StoneColor.BLACK;
         } else if (whiteTotal > blackTotal) {
             resultMessage += "WHITE_WINS";
+            winner = StoneColor.WHITE;
         } else {
             resultMessage += "DRAW";
+            winner = StoneColor.EMPTY;
         }
 
         BroadcastMessage(resultMessage);
+        currentSessionMoves.add(new Move(moveCounter++, resultMessage));
+        gService.saveCompletedGameSession(winner, currentSessionMoves);
     }
 
 }
