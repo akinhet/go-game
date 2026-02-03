@@ -29,7 +29,6 @@ public class BotPlayerHandler extends PlayerHandler {
     @Override
     public void sendMessage(String message) {
 
-        System.out.println("Bot otrzymał "+ message);
         if (message.startsWith("MOVE")) {
             String[] parts = message.split(" ");
             if (parts.length >= 4) {
@@ -57,6 +56,9 @@ public class BotPlayerHandler extends PlayerHandler {
             if (!message.equals("ERROR Game stopped.")){
                 remakeBotMove();
             }
+        }
+        else if (message.startsWith("NEGOTIATION")){
+            getGame().processAgree(this);
         }
     }
 

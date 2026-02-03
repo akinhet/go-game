@@ -3,10 +3,7 @@ package org.example.gogame.client;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -16,6 +13,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import org.example.gogame.StoneColor;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,6 +31,7 @@ public class GuiView {
     private ClientGameController controller;
 
     private Circle[][] stones;
+    private Button nxtBtn = new Button("NEXT MOVE >>");
 
     private static final int CELL_SIZE = 30;
     private static final int PADDING = 20;
@@ -135,7 +134,16 @@ public class GuiView {
             if (controller != null) controller.handleUserInput("negotiation");
         });
 
-        topPanel.getChildren().addAll(colorLabel, passBtn, negoBtn);
+        nxtBtn.setOnAction(e -> {
+
+            if (controller != null) {
+                nxtBtn.setDisable(true);
+                controller.requestNextMove();
+            }
+        });
+
+        topPanel.getChildren().addAll(colorLabel, passBtn, negoBtn, nxtBtn);
+        nxtBtn.setVisible(false);
         root.setTop(topPanel);
     }
 
@@ -245,6 +253,41 @@ public class GuiView {
                 controller.handleUserInput("AGREE");
             else
                 controller.handleUserInput("RESUME");
+        });
+    }
+    public void enableNextMoveButton(){
+        Platform.runLater(() -> {
+            nxtBtn.setDisable(false);
+        });
+    }
+
+    /**
+     * Pokazuje popup z listą gier do wyboru
+     */
+    public void showGameListSelection(List<String> games) {
+        Platform.runLater(() -> {
+            if (games.isEmpty()) {
+                setErr("Brak zapisanych gier do przeglądu.");
+                return;
+            }
+
+            ChoiceDialog<String> dialog = new ChoiceDialog<>(games.get(0), games);
+            dialog.setTitle("Wybierz grę");
+            dialog.setHeaderText("Wybierz historię gry do odtworzenia");
+            dialog.setContentText("Gra:");
+
+            Optional<String> result = dialog.showAndWait();
+            result.ifPresent(selectedGameString -> {
+                String[] parts = selectedGameString.split(" ");
+                String gameId = parts[0];
+
+                setupUI();
+                nxtBtn.setVisible(true);
+                nxtBtn.setDisable(false);
+                setMessage("Tryb Review: Kliknij 'Następny ruch'");
+
+                controller.sendChosenGameId(gameId);
+            });
         });
     }
 }

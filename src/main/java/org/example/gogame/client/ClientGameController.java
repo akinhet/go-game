@@ -5,6 +5,8 @@ import org.example.gogame.StoneColor;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Controls the client-side game flow.
@@ -18,6 +20,8 @@ public class ClientGameController {
     private GuiView view;
     private StoneColor myColor = StoneColor.EMPTY;
     private boolean isGameRunning = true;
+    private boolean isFetchingGameList = false;
+    private List<String> avaliableGames = new ArrayList<>();
 
     /**
      * Constructs the controller.
@@ -84,6 +88,25 @@ public class ClientGameController {
      */
     public synchronized void handleServerMessage(String message) {
         System.out.println("Server: " + message);
+        if (message.equals("START_LIST")){
+            isFetchingGameList = true;
+            avaliableGames.clear();
+            return;
+        }
+        else if (message.equals("END_LIST")) {
+            isFetchingGameList = false;
+            view.showGameListSelection(avaliableGames);
+            return;
+        }else if (isFetchingGameList) {
+            avaliableGames.add(message);
+            return;
+        }
+        else if (message.equals("END_GAME")){
+            view.setMessage("Koniec powtórki.");
+            return;
+        }
+
+
 
         if (message.startsWith("MESSAGE")) {
             view.setMessage(message.substring(8));
@@ -104,6 +127,8 @@ public class ClientGameController {
             int y = Integer.parseInt(parts[2]);
             String color = parts[3];
             view.updateBoard(x, y, StoneColor.valueOf(color));
+
+            view.enableNextMoveButton();
         }
         else if (message.startsWith("CAPTURES")) {
             String[] parts = message.split(" ");
@@ -122,6 +147,22 @@ public class ClientGameController {
         } else if (message.startsWith("NEGOTIATION")) {
             view.negotiate(message.substring(11));
         }
+    }
+    /**
+     * Sending game id to server for replay
+     *
+     * @param gameId id of game to replay
+     */
+    public void sendChosenGameId(String gameId){
+        out.println(gameId);
+        requestNextMove();
+    }
+
+    /**
+     * Sending request for next move of replay
+     */
+    public void requestNextMove(){
+        out.println("NEXT");
     }
 
     /**
