@@ -62,8 +62,6 @@ public class Review implements Runnable {
                         output.println(capture.getMoveString());
                         currentMoveIndex++;
                     } else {
-                        Move score = moves.get(currentMoveIndex);
-                        output.println(score.getMoveString());
                         output.println("END_GAME");
                         break;
                     }

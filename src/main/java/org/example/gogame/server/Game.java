@@ -30,8 +30,7 @@ public class Game {
     private int removedWhite = 0;
     private int removedBlack = 0;
     private ArrayList<Move> currentSessionMoves = new ArrayList<>();
-    private int moveCounter = 1;
-    private ArrayList<Integer> tempMoveNegotiations = new ArrayList<>();
+    private int moveCounter = 0;
     private GameSessionService gService;
 
     /**
@@ -293,6 +292,14 @@ public class Game {
         }
 
         if (playerAgreed[0] && playerAgreed[1]) {
+            StringBuilder tempmove = new StringBuilder();
+            tempmove.append("CAPTURES");
+            for (String m : removed) {
+                String[] s = m.split(" ");
+                tempmove.append(" " + s[1] + " " + s[2]);
+            }
+            currentSessionMoves.add(new Move(moveCounter++, tempmove.toString()));
+
             endGame();
         }
     }
@@ -303,10 +310,17 @@ public class Game {
      * @param player The player quitting.
      */
     public synchronized void processQuit(PlayerHandler player) {
-        BroadcastMessage("PLAYER_QUIT " + player.getColor().name());
-        BroadcastMessage("GAME_OVER " +
-                (player.getColor() == StoneColor.BLACK ? "WHITE" : "BLACK") +
-                "_WINS");
+        String resultMessage = "PLAYER_QUIT " + player.getColor().name();
+        BroadcastMessage(resultMessage);
+        currentSessionMoves.add(new Move(moveCounter++, resultMessage));
+
+        StoneColor winner = player.getColor() == StoneColor.BLACK ? StoneColor.WHITE : StoneColor.BLACK;
+
+        resultMessage = "GAME_OVER " + (player.getColor() == StoneColor.BLACK ? "WHITE" : "BLACK") + "_WINS";
+        BroadcastMessage(resultMessage);
+        currentSessionMoves.add(new Move(moveCounter++, resultMessage));
+
+        gService.saveCompletedGameSession(winner, currentSessionMoves);
     }
 
     /**
